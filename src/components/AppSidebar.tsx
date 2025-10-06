@@ -32,7 +32,7 @@ const menuItems = [
     { title: "History", href: "/history", icon: History },
     { title: "Favorites", href: "/favorites", icon: Heart },
     { title: "Analytics", href: "/analytics", icon: BarChart3 },
-    { title: "Settings", href: "/settings", icon: Settings },
+    // { title: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function AppSidebar() {

@@ -1,5 +1,7 @@
+import GenerateComponentHomePage from "./GenerateComponentHomePage";
+
 export default function GeneratePage() {
     return (
-        <div>GeneratePage</div>
+        <GenerateComponentHomePage />
     )
 }
