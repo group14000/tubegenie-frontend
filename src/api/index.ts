@@ -9,6 +9,7 @@ export * from "./hooks/useGenerateContent";
 export * from "./hooks/useGetContentById";
 export * from "./hooks/useDeleteContentById";
 export * from "./hooks/useToggleFavoriteContent";
+export * from "./hooks/useGetFavorites";
 export * from "./hooks/useGetContentHistory";
 export * from "./hooks/useGetModels";
 export * from "./hooks/useGetAnalytics";

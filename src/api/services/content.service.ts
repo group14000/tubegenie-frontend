@@ -10,6 +10,8 @@ import {
   deleteContentByIdResponseSchema,
   ToggleFavoriteContentResponse,
   toggleFavoriteContentResponseSchema,
+  GetFavoritesResponse,
+  getFavoritesResponseSchema,
 } from "../schemas/content.schema";
 
 export class ContentApi {
@@ -138,6 +140,36 @@ export class ContentApi {
       // Handle validation or network errors
       if (error instanceof Error) {
         throw new Error(`Failed to toggle favorite: ${error.message}`);
+      }
+      throw error;
+    } finally {
+      // Clean up auth token
+      apiClient.removeAuthToken();
+    }
+  }
+
+  /**
+   * Get user's favorite content
+   * @param token - Clerk authentication token
+   * @returns Promise with the favorites data response
+   */
+  static async getFavorites(token: string): Promise<GetFavoritesResponse> {
+    // Set auth token
+    apiClient.setAuthToken(token);
+
+    try {
+      const response = await apiClient
+        .getClient()
+        .get<GetFavoritesResponse>("/api/content/favorites");
+
+      // Validate response data
+      const validatedResponse = getFavoritesResponseSchema.parse(response.data);
+
+      return validatedResponse;
+    } catch (error) {
+      // Handle validation or network errors
+      if (error instanceof Error) {
+        throw new Error(`Failed to fetch favorites: ${error.message}`);
       }
       throw error;
     } finally {

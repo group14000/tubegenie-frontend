@@ -121,3 +121,28 @@ export type ToggleFavoriteContentSuccessResponse = z.infer<
 >;
 export type ToggleFavoriteContentErrorResponse = z.infer<typeof toggleFavoriteContentErrorSchema>;
 export type ToggleFavoriteContentResponse = z.infer<typeof toggleFavoriteContentResponseSchema>;
+
+// Get Favorites Schemas
+export const getFavoritesDataSchema = z.array(getContentByIdDataSchema);
+
+export const getFavoritesSuccessSchema = z.object({
+  success: z.literal(true),
+  data: getFavoritesDataSchema,
+  count: z.number(),
+});
+
+export const getFavoritesErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  path: z.string().optional(),
+});
+
+export const getFavoritesResponseSchema = z.union([
+  getFavoritesSuccessSchema,
+  getFavoritesErrorSchema,
+]);
+
+export type GetFavoritesData = z.infer<typeof getFavoritesDataSchema>;
+export type GetFavoritesSuccessResponse = z.infer<typeof getFavoritesSuccessSchema>;
+export type GetFavoritesErrorResponse = z.infer<typeof getFavoritesErrorSchema>;
+export type GetFavoritesResponse = z.infer<typeof getFavoritesResponseSchema>;
