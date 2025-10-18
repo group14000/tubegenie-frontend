@@ -76,3 +76,24 @@ export type GetContentByIdData = z.infer<typeof getContentByIdDataSchema>;
 export type GetContentByIdSuccessResponse = z.infer<typeof getContentByIdSuccessSchema>;
 export type GetContentByIdErrorResponse = z.infer<typeof getContentByIdErrorSchema>;
 export type GetContentByIdResponse = z.infer<typeof getContentByIdResponseSchema>;
+
+// Delete Content Schemas
+export const deleteContentByIdSuccessSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
+
+export const deleteContentByIdErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  path: z.string().optional(),
+});
+
+export const deleteContentByIdResponseSchema = z.union([
+  deleteContentByIdSuccessSchema,
+  deleteContentByIdErrorSchema,
+]);
+
+export type DeleteContentByIdSuccessResponse = z.infer<typeof deleteContentByIdSuccessSchema>;
+export type DeleteContentByIdErrorResponse = z.infer<typeof deleteContentByIdErrorSchema>;
+export type DeleteContentByIdResponse = z.infer<typeof deleteContentByIdResponseSchema>;

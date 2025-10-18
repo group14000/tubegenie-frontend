@@ -27,6 +27,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -46,9 +56,10 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGetContentHistory, useGetModels, useGetContentById } from "@/api";
+import { useGetContentHistory, useGetModels, useGetContentById, useDeleteContentById } from "@/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function HistoryHomePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +68,11 @@ export default function HistoryHomePage() {
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedSections, setCopiedSections] = useState<Record<string, boolean>>({});
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] = useState<{
+    id: string;
+    topic: string;
+  } | null>(null);
 
   const { data, isLoading, error, refetch, isFetching } = useGetContentHistory({
     limit,
@@ -71,6 +87,22 @@ export default function HistoryHomePage() {
     error: detailsError,
   } = useGetContentById(selectedContentId || "", {
     enabled: !!selectedContentId && isDialogOpen,
+  });
+
+  // Delete content mutation
+  const deleteMutation = useDeleteContentById({
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(response.message || "Content deleted successfully!");
+      }
+      setDeleteConfirmOpen(false);
+      setContentToDelete(null);
+      // Refetch the content history to update the list
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete content");
+    },
   });
 
   const availableModels = modelsData?.data || [];
@@ -146,6 +178,22 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
     } catch {
       toast.error("Failed to copy to clipboard");
     }
+  };
+
+  const handleDeleteClick = (id: string, topic: string) => {
+    setContentToDelete({ id, topic });
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (contentToDelete) {
+      deleteMutation.mutate(contentToDelete.id);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setContentToDelete(null);
   };
 
   // Loading State
@@ -354,7 +402,12 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 cursor-pointer"
+                            className={cn(
+                              "h-8 w-8",
+                              item.isFavorite
+                                ? "fill-red-500 text-red-500 cursor-not-allowed"
+                                : "cursor-pointer"
+                            )}
                             onClick={() => {
                               // TODO: Implement favorite toggle
                               toast.info("Favorite feature coming soon!");
@@ -378,12 +431,14 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 cursor-pointer"
-                            onClick={() => {
-                              // TODO: Implement delete functionality
-                              toast.info("Delete feature coming soon!");
-                            }}
+                            onClick={() => handleDeleteClick(item._id, item.topic)}
+                            disabled={deleteMutation.isPending}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {deleteMutation.isPending && contentToDelete?.id === item._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </TableCell>
@@ -643,6 +698,41 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the content{" "}
+              <span className="font-semibold text-foreground">
+                &quot;{contentToDelete?.topic}&quot;
+              </span>{" "}
+              from your history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel} disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

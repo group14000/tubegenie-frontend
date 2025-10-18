@@ -7,6 +7,7 @@ export * from "./schemas/analytics.schema";
 // Hooks
 export * from "./hooks/useGenerateContent";
 export * from "./hooks/useGetContentById";
+export * from "./hooks/useDeleteContentById";
 export * from "./hooks/useGetContentHistory";
 export * from "./hooks/useGetModels";
 export * from "./hooks/useGetAnalytics";

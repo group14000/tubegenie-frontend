@@ -6,6 +6,8 @@ import {
   generateContentResponseSchema,
   GetContentByIdResponse,
   getContentByIdResponseSchema,
+  DeleteContentByIdResponse,
+  deleteContentByIdResponseSchema,
 } from "../schemas/content.schema";
 
 export class ContentApi {
@@ -69,6 +71,37 @@ export class ContentApi {
       // Handle validation or network errors
       if (error instanceof Error) {
         throw new Error(`Failed to fetch content: ${error.message}`);
+      }
+      throw error;
+    } finally {
+      // Clean up auth token
+      apiClient.removeAuthToken();
+    }
+  }
+
+  /**
+   * Delete content by ID
+   * @param id - The content ID to delete
+   * @param token - Clerk authentication token
+   * @returns Promise with the delete response
+   */
+  static async deleteContentById(id: string, token: string): Promise<DeleteContentByIdResponse> {
+    // Set auth token
+    apiClient.setAuthToken(token);
+
+    try {
+      const response = await apiClient
+        .getClient()
+        .delete<DeleteContentByIdResponse>(`/api/content/${id}`);
+
+      // Validate response data
+      const validatedResponse = deleteContentByIdResponseSchema.parse(response.data);
+
+      return validatedResponse;
+    } catch (error) {
+      // Handle validation or network errors
+      if (error instanceof Error) {
+        throw new Error(`Failed to delete content: ${error.message}`);
       }
       throw error;
     } finally {
