@@ -56,7 +56,13 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGetContentHistory, useGetModels, useGetContentById, useDeleteContentById } from "@/api";
+import {
+  useGetContentHistory,
+  useGetModels,
+  useGetContentById,
+  useDeleteContentById,
+  useToggleFavoriteContent,
+} from "@/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -102,6 +108,20 @@ export default function HistoryHomePage() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete content");
+    },
+  });
+
+  // Toggle favorite mutation
+  const toggleFavoriteMutation = useToggleFavoriteContent({
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(response.message || "Favorite status updated!");
+        // Refetch the content history to update the list
+        refetch();
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update favorite status");
     },
   });
 
@@ -194,6 +214,16 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
   const handleDeleteCancel = () => {
     setDeleteConfirmOpen(false);
     setContentToDelete(null);
+  };
+
+  const handleToggleFavorite = (id: string, currentStatus: boolean) => {
+    if (currentStatus) {
+      // Already a favorite, show info message
+      toast.info("This content is already in your favorites!");
+      return;
+    }
+    // Toggle favorite status
+    toggleFavoriteMutation.mutate(id);
   };
 
   // Loading State
@@ -404,20 +434,21 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                             size="icon"
                             className={cn(
                               "h-8 w-8",
-                              item.isFavorite
-                                ? "fill-red-500 text-red-500 cursor-not-allowed"
-                                : "cursor-pointer"
+                              item.isFavorite ? "cursor-not-allowed" : "cursor-pointer"
                             )}
-                            onClick={() => {
-                              // TODO: Implement favorite toggle
-                              toast.info("Favorite feature coming soon!");
-                            }}
+                            onClick={() => handleToggleFavorite(item._id, item.isFavorite)}
+                            disabled={item.isFavorite || toggleFavoriteMutation.isPending}
                           >
-                            <Heart
-                              className={`h-4 w-4 ${
-                                item.isFavorite ? "fill-red-500 text-red-500" : ""
-                              }`}
-                            />
+                            {toggleFavoriteMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Heart
+                                className={cn(
+                                  "h-4 w-4",
+                                  item.isFavorite && "fill-red-500 text-red-500"
+                                )}
+                              />
+                            )}
                           </Button>
                           <Button
                             variant="ghost"

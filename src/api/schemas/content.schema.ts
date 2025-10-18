@@ -97,3 +97,27 @@ export const deleteContentByIdResponseSchema = z.union([
 export type DeleteContentByIdSuccessResponse = z.infer<typeof deleteContentByIdSuccessSchema>;
 export type DeleteContentByIdErrorResponse = z.infer<typeof deleteContentByIdErrorSchema>;
 export type DeleteContentByIdResponse = z.infer<typeof deleteContentByIdResponseSchema>;
+
+// Toggle Favorite Schemas
+export const toggleFavoriteContentSuccessSchema = z.object({
+  success: z.literal(true),
+  data: getContentByIdDataSchema,
+  message: z.string(),
+});
+
+export const toggleFavoriteContentErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  path: z.string().optional(),
+});
+
+export const toggleFavoriteContentResponseSchema = z.union([
+  toggleFavoriteContentSuccessSchema,
+  toggleFavoriteContentErrorSchema,
+]);
+
+export type ToggleFavoriteContentSuccessResponse = z.infer<
+  typeof toggleFavoriteContentSuccessSchema
+>;
+export type ToggleFavoriteContentErrorResponse = z.infer<typeof toggleFavoriteContentErrorSchema>;
+export type ToggleFavoriteContentResponse = z.infer<typeof toggleFavoriteContentResponseSchema>;
