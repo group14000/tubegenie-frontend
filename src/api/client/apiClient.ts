@@ -1,5 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
-import getBaseUrl from '../basurl';
+import axios, { AxiosInstance } from "axios";
+import getBaseUrl from "../basurl";
 
 class ApiClient {
   private client: AxiosInstance;
@@ -8,17 +8,17 @@ class ApiClient {
     this.client = axios.create({
       baseURL: getBaseUrl(),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   }
 
   setAuthToken(token: string) {
-    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    this.client.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   }
 
   removeAuthToken() {
-    delete this.client.defaults.headers.common['Authorization'];
+    delete this.client.defaults.headers.common["Authorization"];
   }
 
   getClient() {

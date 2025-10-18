@@ -1,10 +1,10 @@
-import { apiClient } from '../client/apiClient';
+import { apiClient } from "../client/apiClient";
 import {
   GenerateContentRequest,
   GenerateContentResponse,
   generateContentRequestSchema,
   generateContentResponseSchema,
-} from '../schemas/content.schema';
+} from "../schemas/content.schema";
 
 export class ContentApi {
   /**
@@ -24,10 +24,9 @@ export class ContentApi {
     apiClient.setAuthToken(token);
 
     try {
-      const response = await apiClient.getClient().post<GenerateContentResponse>(
-        '/api/content/generate',
-        validatedData
-      );
+      const response = await apiClient
+        .getClient()
+        .post<GenerateContentResponse>("/api/content/generate", validatedData);
 
       // Validate response data
       const validatedResponse = generateContentResponseSchema.parse(response.data);

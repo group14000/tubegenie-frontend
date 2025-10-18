@@ -1,15 +1,15 @@
-import { useMutation, UseMutationOptions } from '@tanstack/react-query';
-import { useAuth } from '@clerk/nextjs';
-import { ContentApi } from '../services/content.service';
+import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
+import { ContentApi } from "../services/content.service";
 import {
   GenerateContentRequest,
   GenerateContentResponse,
   GenerateContentErrorResponse,
-} from '../schemas/content.schema';
+} from "../schemas/content.schema";
 
 type UseGenerateContentOptions = Omit<
   UseMutationOptions<GenerateContentResponse, Error, GenerateContentRequest>,
-  'mutationFn'
+  "mutationFn"
 >;
 
 /**
@@ -24,7 +24,7 @@ export function useGenerateContent(options?: UseGenerateContentOptions) {
       const token = await getToken();
 
       if (!token) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
 
       const response = await ContentApi.generateContent(data, token);

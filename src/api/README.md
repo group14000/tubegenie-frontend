@@ -18,16 +18,16 @@ src/api/
 ### Basic Usage
 
 ```tsx
-'use client';
+"use client";
 
-import { useGenerateContent } from '@/api';
-import { toast } from 'sonner';
+import { useGenerateContent } from "@/api";
+import { toast } from "sonner";
 
 export default function MyComponent() {
   const { mutate, isPending, data } = useGenerateContent({
     onSuccess: (response) => {
       if (response.success) {
-        toast.success('Content generated!');
+        toast.success("Content generated!");
       }
     },
     onError: (error) => {
@@ -37,14 +37,14 @@ export default function MyComponent() {
 
   const handleGenerate = () => {
     mutate({
-      topic: 'AI in Healthcare 2025',
-      model: 'tngtech/deepseek-r1t2-chimera:free',
+      topic: "AI in Healthcare 2025",
+      model: "tngtech/deepseek-r1t2-chimera:free",
     });
   };
 
   return (
     <button onClick={handleGenerate} disabled={isPending}>
-      {isPending ? 'Generating...' : 'Generate'}
+      {isPending ? "Generating..." : "Generate"}
     </button>
   );
 }
@@ -53,9 +53,9 @@ export default function MyComponent() {
 ### With Form Validation
 
 ```tsx
-import { useGenerateContent, generateContentRequestSchema } from '@/api';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useGenerateContent, generateContentRequestSchema } from "@/api";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function FormExample() {
   const form = useForm({
@@ -96,15 +96,18 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
 TanStack Query mutation hook for generating content.
 
 **Parameters:**
+
 - `options` - Optional mutation options (onSuccess, onError, etc.)
 
 **Returns:**
+
 - `mutate(data)` - Trigger the mutation
 - `isPending` - Loading state
 - `data` - Response data
 - `error` - Error object if failed
 
 **Request Schema:**
+
 ```typescript
 {
   topic: string;
@@ -113,6 +116,7 @@ TanStack Query mutation hook for generating content.
 ```
 
 **Success Response:**
+
 ```typescript
 {
   success: true;
@@ -128,6 +132,7 @@ TanStack Query mutation hook for generating content.
 ```
 
 **Error Response:**
+
 ```typescript
 {
   success: false;

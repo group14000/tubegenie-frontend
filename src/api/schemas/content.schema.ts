@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Request Schema
 export const generateContentRequestSchema = z.object({
-  topic: z.string().min(1, 'Topic is required'),
-  model: z.string().min(1, 'Model is required'),
+  topic: z.string().min(1, "Topic is required"),
+  model: z.string().min(1, "Model is required"),
 });
 
 export type GenerateContentRequest = z.infer<typeof generateContentRequestSchema>;

@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useGenerateContent } from '@/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useGenerateContent } from "@/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function GenerateContentExample() {
-  const [topic, setTopic] = useState('');
-  const [model, setModel] = useState('tngtech/deepseek-r1t2-chimera:free');
+  const [topic, setTopic] = useState("");
+  const [model, setModel] = useState("tngtech/deepseek-r1t2-chimera:free");
 
   const { mutate, isPending, data, error } = useGenerateContent({
     onSuccess: (response) => {
       if (response.success) {
-        toast.success('Content generated successfully!');
+        toast.success("Content generated successfully!");
       }
     },
     onError: (error) => {
-      toast.error(error.message || 'Failed to generate content');
+      toast.error(error.message || "Failed to generate content");
     },
   });
 
@@ -33,9 +33,7 @@ export default function GenerateContentExample() {
       <Card>
         <CardHeader>
           <CardTitle>Content Generator</CardTitle>
-          <CardDescription>
-            Generate YouTube content ideas using AI
-          </CardDescription>
+          <CardDescription>Generate YouTube content ideas using AI</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -52,16 +50,11 @@ export default function GenerateContentExample() {
 
             <div className="space-y-2">
               <Label htmlFor="model">AI Model</Label>
-              <Input
-                id="model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                required
-              />
+              <Input id="model" value={model} onChange={(e) => setModel(e.target.value)} required />
             </div>
 
             <Button type="submit" disabled={isPending} className="w-full">
-              {isPending ? 'Generating...' : 'Generate Content'}
+              {isPending ? "Generating..." : "Generate Content"}
             </Button>
           </form>
 
@@ -78,7 +71,9 @@ export default function GenerateContentExample() {
                 <h3 className="font-semibold mb-2">Generated Titles:</h3>
                 <ul className="list-disc list-inside space-y-1">
                   {data.data.titles.map((title, idx) => (
-                    <li key={idx} className="text-sm">{title}</li>
+                    <li key={idx} className="text-sm">
+                      {title}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -103,7 +98,9 @@ export default function GenerateContentExample() {
                 <h3 className="font-semibold mb-2">Thumbnail Ideas:</h3>
                 <ul className="list-disc list-inside space-y-1">
                   {data.data.thumbnailIdeas.map((idea, idx) => (
-                    <li key={idx} className="text-sm">{idea}</li>
+                    <li key={idx} className="text-sm">
+                      {idea}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -112,14 +109,14 @@ export default function GenerateContentExample() {
                 <h3 className="font-semibold mb-2">Script Outline:</h3>
                 <ol className="list-decimal list-inside space-y-1">
                   {data.data.scriptOutline.map((item, idx) => (
-                    <li key={idx} className="text-sm">{item}</li>
+                    <li key={idx} className="text-sm">
+                      {item}
+                    </li>
                   ))}
                 </ol>
               </div>
 
-              <div className="text-xs text-muted-foreground">
-                Model used: {data.data.aiModel}
-              </div>
+              <div className="text-xs text-muted-foreground">Model used: {data.data.aiModel}</div>
             </div>
           )}
         </CardContent>
