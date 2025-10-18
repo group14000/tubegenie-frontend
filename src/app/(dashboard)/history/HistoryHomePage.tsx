@@ -21,6 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
   Search,
   Heart,
   Download,
@@ -31,11 +40,13 @@ import {
   RefreshCcw,
   Calendar,
   Sparkles,
+  Copy,
+  Check,
 } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGetContentHistory, useGetModels } from "@/api";
+import { useGetContentHistory, useGetModels, useGetContentById } from "@/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -43,12 +54,24 @@ export default function HistoryHomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModel, setFilterModel] = useState("all");
   const [limit, setLimit] = useState(20);
+  const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [copiedSections, setCopiedSections] = useState<Record<string, boolean>>({});
 
   const { data, isLoading, error, refetch, isFetching } = useGetContentHistory({
     limit,
   });
 
   const { data: modelsData, isLoading: isLoadingModels } = useGetModels();
+
+  // Fetch content details when a content ID is selected
+  const {
+    data: contentDetails,
+    isLoading: isLoadingDetails,
+    error: detailsError,
+  } = useGetContentById(selectedContentId || "", {
+    enabled: !!selectedContentId && isDialogOpen,
+  });
 
   const availableModels = modelsData?.data || [];
 
@@ -104,6 +127,25 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
     URL.revokeObjectURL(url);
 
     toast.success("Downloaded successfully!");
+  };
+
+  const handleViewDetails = (contentId: string) => {
+    setSelectedContentId(contentId);
+    setIsDialogOpen(true);
+    setCopiedSections({});
+  };
+
+  const handleCopyToClipboard = async (text: string, sectionId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedSections((prev) => ({ ...prev, [sectionId]: true }));
+      toast.success("Copied to clipboard!");
+      setTimeout(() => {
+        setCopiedSections((prev) => ({ ...prev, [sectionId]: false }));
+      }, 2000);
+    } catch {
+      toast.error("Failed to copy to clipboard");
+    }
   };
 
   // Loading State
@@ -304,18 +346,15 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
-                            onClick={() => {
-                              // TODO: Implement view details modal
-                              toast.info("View details coming soon!");
-                            }}
+                            className="h-8 w-8 cursor-pointer"
+                            onClick={() => handleViewDetails(item._id)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 cursor-pointer"
                             onClick={() => {
                               // TODO: Implement favorite toggle
                               toast.info("Favorite feature coming soon!");
@@ -330,7 +369,7 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 cursor-pointer"
                             onClick={() => handleDownload(item)}
                           >
                             <Download className="h-4 w-4" />
@@ -338,7 +377,7 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 cursor-pointer"
                             onClick={() => {
                               // TODO: Implement delete functionality
                               toast.info("Delete feature coming soon!");
@@ -356,6 +395,254 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
           )}
         </CardContent>
       </Card>
+
+      {/* Content Details Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Content Details</DialogTitle>
+            <DialogDescription>
+              View the complete details of your generated content
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingDetails ? (
+            <div className="space-y-4 py-6">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : detailsError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{detailsError.message}</AlertDescription>
+            </Alert>
+          ) : contentDetails ? (
+            <ScrollArea className="max-h-[calc(90vh-12rem)] pr-4">
+              <div className="space-y-6">
+                {/* Topic Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Topic
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopyToClipboard(contentDetails.topic, "topic")}
+                    >
+                      {copiedSections["topic"] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-base bg-card/50 p-4 rounded-lg">{contentDetails.topic}</p>
+                </div>
+
+                <Separator />
+
+                {/* Titles Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Video Titles</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        handleCopyToClipboard(contentDetails.titles.join("\n\n"), "titles")
+                      }
+                    >
+                      {copiedSections["titles"] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {contentDetails.titles.map((title, idx) => (
+                      <div key={idx} className="flex items-start gap-2 bg-card/50 p-3 rounded-lg">
+                        <Badge variant="secondary" className="mt-1">
+                          {idx + 1}
+                        </Badge>
+                        <p className="flex-1">{title}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Description Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Description</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        handleCopyToClipboard(contentDetails.description, "description")
+                      }
+                    >
+                      {copiedSections["description"] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-sm bg-card/50 p-4 rounded-lg leading-relaxed">
+                    {contentDetails.description}
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Tags Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Tags</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopyToClipboard(contentDetails.tags.join(" "), "tags")}
+                    >
+                      {copiedSections["tags"] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {contentDetails.tags.map((tag, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-sm">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Thumbnail Ideas Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Thumbnail Ideas</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        handleCopyToClipboard(
+                          contentDetails.thumbnailIdeas.join("\n"),
+                          "thumbnails"
+                        )
+                      }
+                    >
+                      {copiedSections["thumbnails"] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {contentDetails.thumbnailIdeas.map((idea, idx) => (
+                      <div key={idx} className="flex items-center gap-2 bg-card/50 p-3 rounded-lg">
+                        <Badge variant="outline">{idx + 1}</Badge>
+                        <p className="flex-1 text-sm">{idea}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Script Outline Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Script Outline</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        handleCopyToClipboard(
+                          contentDetails.scriptOutline
+                            .map((item, idx) => `${idx + 1}. ${item}`)
+                            .join("\n"),
+                          "script"
+                        )
+                      }
+                    >
+                      {copiedSections["script"] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {contentDetails.scriptOutline.map((outline, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-card/50 p-3 rounded-lg">
+                        <Badge variant="secondary" className="mt-1">
+                          {idx + 1}
+                        </Badge>
+                        <p className="flex-1 text-sm">{outline}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Metadata Section */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-card/50 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">AI Model</p>
+                    <Badge variant="secondary" className="font-mono">
+                      <Sparkles className="mr-1 h-3 w-3" />
+                      {contentDetails.aiModel.split("/").pop()?.split(":")[0] || "AI"}
+                    </Badge>
+                  </div>
+                  <div className="bg-card/50 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Created</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <p className="text-sm font-medium">
+                        {format(new Date(contentDetails.createdAt), "PPP")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-card/50 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    {contentDetails.isFavorite ? (
+                      <Badge variant="outline" className="text-xs">
+                        <Heart className="mr-1 h-3 w-3 fill-red-500 text-red-500" />
+                        Favorite
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">
+                        Saved
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="bg-card/50 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Content ID</p>
+                    <p className="text-xs font-mono text-muted-foreground truncate">
+                      {contentDetails._id}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

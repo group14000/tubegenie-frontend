@@ -4,6 +4,8 @@ import {
   GenerateContentResponse,
   generateContentRequestSchema,
   generateContentResponseSchema,
+  GetContentByIdResponse,
+  getContentByIdResponseSchema,
 } from "../schemas/content.schema";
 
 export class ContentApi {
@@ -36,6 +38,37 @@ export class ContentApi {
       // Handle validation or network errors
       if (error instanceof Error) {
         throw new Error(`Failed to generate content: ${error.message}`);
+      }
+      throw error;
+    } finally {
+      // Clean up auth token
+      apiClient.removeAuthToken();
+    }
+  }
+
+  /**
+   * Get content by ID
+   * @param id - The content ID to fetch
+   * @param token - Clerk authentication token
+   * @returns Promise with the content data response
+   */
+  static async getContentById(id: string, token: string): Promise<GetContentByIdResponse> {
+    // Set auth token
+    apiClient.setAuthToken(token);
+
+    try {
+      const response = await apiClient
+        .getClient()
+        .get<GetContentByIdResponse>(`/api/content/${id}`);
+
+      // Validate response data
+      const validatedResponse = getContentByIdResponseSchema.parse(response.data);
+
+      return validatedResponse;
+    } catch (error) {
+      // Handle validation or network errors
+      if (error instanceof Error) {
+        throw new Error(`Failed to fetch content: ${error.message}`);
       }
       throw error;
     } finally {
