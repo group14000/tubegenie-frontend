@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,49 +19,22 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useGenerateContent } from "@/api";
-
-interface AIModel {
-  id: string;
-  name: string;
-  provider: string;
-  description: string;
-  capabilities: string[];
-  isDefault: boolean;
-}
-
-export const AVAILABLE_MODELS: AIModel[] = [
-  {
-    id: "tngtech/deepseek-r1t2-chimera:free",
-    name: "DeepSeek R1T2 Chimera",
-    provider: "TNG Technology",
-    description: "Advanced reasoning model with superior problem-solving capabilities",
-    capabilities: ["text-generation", "reasoning", "analysis"],
-    isDefault: true,
-  },
-  {
-    id: "google/gemini-2.0-flash-exp:free",
-    name: "Gemini 2.0 Flash",
-    provider: "Google",
-    description: "Fast multimodal model supporting text and image inputs",
-    capabilities: ["text-generation", "image-understanding", "multimodal"],
-    isDefault: false,
-  },
-  {
-    id: "z-ai/glm-4.5-air:free",
-    name: "GLM 4.5 Air",
-    provider: "Z-AI",
-    description: "Lightweight model optimized for speed and efficiency",
-    capabilities: ["text-generation", "fast-response"],
-    isDefault: false,
-  },
-];
+import { useGenerateContent, useGetModels } from "@/api";
 
 export default function GenerateComponentHomePage() {
   const [topic, setTopic] = useState("");
-  const [model, setModel] = useState(
-    AVAILABLE_MODELS.find((m) => m.isDefault)?.id || AVAILABLE_MODELS[0].id
-  );
+  const [model, setModel] = useState("");
+
+  const { data: modelsData, isLoading: isLoadingModels, error: modelsError } = useGetModels();
+
+  // Set default model when models are loaded
+  useEffect(() => {
+    if (modelsData?.defaultModel && !model) {
+      setModel(modelsData.defaultModel);
+    }
+  }, [modelsData, model]);
+
+  const availableModels = modelsData?.data || [];
 
   const { mutate, isPending, data, error } = useGenerateContent({
     onSuccess: (response) => {
@@ -133,24 +106,37 @@ export default function GenerateComponentHomePage() {
 
             <div className="space-y-2">
               <Label htmlFor="model">AI Model</Label>
-              <Select value={model} onValueChange={setModel}>
+              <Select
+                value={model}
+                onValueChange={setModel}
+                disabled={isLoadingModels || !!modelsError}
+              >
                 <SelectTrigger className="bg-card border-border">
-                  <SelectValue />
+                  <SelectValue
+                    placeholder={
+                      isLoadingModels
+                        ? "Loading models..."
+                        : modelsError
+                          ? "Error loading models"
+                          : "Select a model"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {AVAILABLE_MODELS.map((modelOption) => (
+                  {availableModels.map((modelOption) => (
                     <SelectItem key={modelOption.id} value={modelOption.id}>
                       {modelOption.name} {modelOption.isDefault && "(Recommended)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {modelsError && <p className="text-xs text-destructive">Failed to load models</p>}
             </div>
 
             <Button
               onClick={handleGenerate}
               className="w-full gradient-primary hover:opacity-90"
-              disabled={!topic || isPending}
+              disabled={!topic || !model || isPending || isLoadingModels}
             >
               {isPending ? (
                 <>

@@ -35,45 +35,9 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGetContentHistory } from "@/api";
+import { useGetContentHistory, useGetModels } from "@/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
-
-interface AIModel {
-  id: string;
-  name: string;
-  provider: string;
-  description: string;
-  capabilities: string[];
-  isDefault: boolean;
-}
-
-export const AVAILABLE_MODELS: AIModel[] = [
-  {
-    id: "tngtech/deepseek-r1t2-chimera:free",
-    name: "DeepSeek R1T2 Chimera",
-    provider: "TNG Technology",
-    description: "Advanced reasoning model with superior problem-solving capabilities",
-    capabilities: ["text-generation", "reasoning", "analysis"],
-    isDefault: true,
-  },
-  {
-    id: "google/gemini-2.0-flash-exp:free",
-    name: "Gemini 2.0 Flash",
-    provider: "Google",
-    description: "Fast multimodal model supporting text and image inputs",
-    capabilities: ["text-generation", "image-understanding", "multimodal"],
-    isDefault: false,
-  },
-  {
-    id: "z-ai/glm-4.5-air:free",
-    name: "GLM 4.5 Air",
-    provider: "Z-AI",
-    description: "Lightweight model optimized for speed and efficiency",
-    capabilities: ["text-generation", "fast-response"],
-    isDefault: false,
-  },
-];
 
 export default function HistoryHomePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,6 +47,10 @@ export default function HistoryHomePage() {
   const { data, isLoading, error, refetch, isFetching } = useGetContentHistory({
     limit,
   });
+
+  const { data: modelsData, isLoading: isLoadingModels } = useGetModels();
+
+  const availableModels = modelsData?.data || [];
 
   // Filter and search logic
   const filteredData = useMemo(() => {
@@ -236,13 +204,15 @@ CREATED: ${format(new Date(item.createdAt), "PPP")}
                 className="pl-10 bg-card border-border"
               />
             </div>
-            <Select value={filterModel} onValueChange={setFilterModel}>
+            <Select value={filterModel} onValueChange={setFilterModel} disabled={isLoadingModels}>
               <SelectTrigger className="w-full sm:w-[200px] bg-card border-border">
-                <SelectValue placeholder="Filter by model" />
+                <SelectValue
+                  placeholder={isLoadingModels ? "Loading models..." : "Filter by model"}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Models</SelectItem>
-                {AVAILABLE_MODELS.map((modelOption) => (
+                {availableModels.map((modelOption) => (
                   <SelectItem key={modelOption.id} value={modelOption.id}>
                     {modelOption.name} {modelOption.isDefault && "(Recommended)"}
                   </SelectItem>

@@ -20,6 +20,7 @@ TubeGenie is a Next.js 15 application using the App Router for YouTube-related f
 - **Structure**: `src/api/` with `schemas/` (Zod), `services/`, `hooks/` (TanStack Query), `client/` (Axios)
 - **Authentication**: Use `useAuth().getToken()` for Clerk tokens, pass to API hooks
 - **Error Handling**: API hooks handle auth automatically, return `{isPending, error, data}`
+- **Models API**: Dynamic model fetching with `useGetModels()` hook instead of hardcoded arrays
 - **Example**: `const { mutate, isPending } = useGenerateContent({ onSuccess: (data) => toast.success('Done!') })`
 
 ### Component Patterns
@@ -37,6 +38,7 @@ TubeGenie is a Next.js 15 application using the App Router for YouTube-related f
 - **Success Feedback**: Use `toast()` from Sonner for user notifications
 - **Copy Functionality**: Implement clipboard copy with `navigator.clipboard.writeText()`
 - **Responsive Design**: Use Tailwind responsive classes and `useSidebar()` hook
+- **Model Selection**: Dynamic model dropdowns with loading states and error handling
 
 ### Navigation & Layout
 
@@ -49,6 +51,8 @@ TubeGenie is a Next.js 15 application using the App Router for YouTube-related f
 - **Development**: `pnpm dev` (uses Turbopack)
 - **Build**: `pnpm build` (includes Turbopack)
 - **Lint**: `pnpm lint` (ESLint with Next.js rules)
+- **Format**: `pnpm format` (Prettier with project config)
+- **Pre-commit**: Husky runs `lint-staged` (ESLint + Prettier on staged files)
 - **Auth Routes**: Sign-in/up handled by Clerk catch-all routes (`app/sign-in/[[...sign-in]]/`)
 
 ## Examples
@@ -66,6 +70,23 @@ const { mutate, isPending, data, error } = useGenerateContent({
     toast.error(error.message);
   },
 });
+```
+
+### Dynamic Model Selection
+
+```tsx
+const { data: modelsData, isLoading: isLoadingModels } = useGetModels();
+const availableModels = modelsData?.data || [];
+
+<Select disabled={isLoadingModels}>
+  <SelectContent>
+    {availableModels.map((model) => (
+      <SelectItem key={model.id} value={model.id}>
+        {model.name} {model.isDefault && "(Recommended)"}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>;
 ```
 
 ### Component with API Integration
@@ -112,6 +133,8 @@ const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 - **Sonner**: Toast notifications for user feedback
 - **shadcn/ui**: Pre-built components with Radix UI primitives
 - **Tailwind v4**: Modern CSS with custom theme variables and `@custom-variant dark`
+- **Husky**: Git hooks for pre-commit quality checks
+- **lint-staged**: Run linters on staged files only
 
 ## Critical Conventions
 
@@ -120,5 +143,7 @@ const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 - **Loading States**: Show skeletons/loaders during async operations, disable buttons
 - **Authentication**: All dashboard routes are protected by default via middleware
 - **File Organization**: Keep API logic separate from UI components using custom hooks
+- **Model Management**: Use `useGetModels()` hook instead of hardcoded model arrays
+- **Code Quality**: Pre-commit hooks enforce ESLint and Prettier formatting
 
 Focus on YouTube content generation features when adding new functionality.
